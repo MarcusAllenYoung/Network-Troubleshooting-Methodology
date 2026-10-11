@@ -11,7 +11,7 @@ if possible.
 
 The root cause is unknown at the start of the investigation.
 
-## Topology
+## Lab 01 Topology
 
 <img width="1283" height="614" alt="image" src="https://github.com/user-attachments/assets/015dbd01-437c-4d6b-a170-7ca4a7b2c4a3" />
 
