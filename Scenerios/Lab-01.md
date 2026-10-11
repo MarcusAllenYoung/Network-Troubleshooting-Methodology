@@ -40,7 +40,7 @@ I tested Host B to see if the issue was only affecting Host A and Host C.
 - Host B -> ping timecards.com -> unsuccessful
 - Host B had the same problem, so the issue was affecting all three hosts.
 
-I then tried to reach the timecard server directly by IP address (214.1.1.10)
+I then tried to reach the timecard server directly by IP address `214.1.1.10`
 
 - All three hosts were unable to reach the server by IP address.
 
@@ -51,9 +51,9 @@ Since the destination also failed when I used the IP address directly, I started
 I checked the network settings on each host.
 
 - DNS Server: 172.16.30.250
-- Host A Default Gateway: 10.10.10.1
-- Host B Default Gateway: 10.20.20.1
-- Host C Default Gateway: 10.30.30.1
+- Host A Default Gateway: `10.10.10.1`
+- Host B Default Gateway: `10.20.20.1`
+- Host C Default Gateway: `10.30.30.1`
 
 I then tested connectivity to the DNS server and each host's default gateway.
 
@@ -76,15 +76,15 @@ I kept testing farther through the network.
 - Host B -> Edge router -> successful
 - Host C -> Edge router -> successful
 
-Since all three hosts could reach the Edge router, I continued looking farther upstream.
+Since all three hosts could reach the Edge router, the internal network path appeared to be working. I continued investigating the Edge router and the path toward the Internet.
 
 ### Step 5 - Check routing
 
-I checked the routing table and routing configuration.
+I checked the routing table and routing configuration on the Edge router.
 
-The routes looked correct and the expected networks were present.
+The expected routes were present, and the routing configuration appeared correct.
 
-Since routing appeared to be working, I moved on to checking NAT on the Edge router.
+Since the hosts could reach the Edge router and the expected routes were present, I moved on to checking NAT.
 
 ### Step 6 - Check NAT
 
@@ -94,19 +94,33 @@ When I checked the NAT configuration, I noticed that the NAT pool was using priv
 
 ## Root Cause
 
-The NAT pool on the Edge router was configured with private IP addresses.
+The Edge router was configured to translate the internal hosts using a NAT pool of `192.168.100.10 - 192.168.100.50`.
 
-Because of that, the internal hosts were being translated to private addresses that could not be used to reach the Internet.
+That range uses private IPv4 addresses, so the translated traffic could not be routed across the simulated public Internet.
 
 ## Resolution
 
-I removed the incorrect NAT pool configuration and configured PAT using the Edge router's upstream interface.
+I replaced the incorrect NAT pool configuration with PAT using the Edge router's upstream interface.
 
-#ip nat inside source list NAT_LIST interface g0/0/1 overload
+1. Removed the NAT statement using the NAT pool:
+
+   `no ip nat inside source list NAT_LIST pool NAT_POOL`
+
+2. Configured PAT using the upstream interface:
+
+   `ip nat inside source list NAT_LIST interface g0/0/1 overload`
+
+3. Removed the unused NAT pool:
+
+   `no ip nat pool NAT_POOL 192.168.100.10 192.168.100.50 netmask 255.255.255.0`
 
 ## Validation
 
 After fixing the NAT configuration, the hosts were able to reach the timecard system successfully.
+
+<img width="1919" height="257" alt="image" src="https://github.com/user-attachments/assets/1ac964d3-952b-4b4c-8eaf-c941ead1f91d" />
+
+---
 
 During validation, I also noticed that the scenario says: timecards.com, but the DNS server has: timecard.com configured.
 
@@ -126,7 +140,7 @@ I still need to get better at thinking about what each test tells me before movi
 
 ## Video Walkthrough
 
-YouTube video coming soon.
+YouTube video coming soon ⌛
 
 ## Tool
 
