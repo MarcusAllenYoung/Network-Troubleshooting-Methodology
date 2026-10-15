@@ -4,8 +4,6 @@ This project documents my progress through a series of network troubleshooting l
 
 Each lab begins with the root cause unknown. The goal is to improve my troubleshooting skills through repeated hands-on practice and develop a more consistent troubleshooting methodology over time.
 
----
-
 ## 1. Result Classifications 📊
 
 Each lab will have one of two results:
@@ -17,8 +15,6 @@ I identified the root cause and resolved the issue without reviewing the Witty N
 ### Escalated
 
 I reached a point where I could not identify or resolve the issue independently and reviewed the Witty Networks answer for guidance.
-
----
 
 ## 2. Documentation 📝
 
@@ -37,13 +33,9 @@ I want the documentation to be as transparent as possible. If I get stuck, make 
 
 I think showing the mistakes along with the improvements will give the clearest picture of how my troubleshooting skills develop over time.
 
----
-
-## 3. Tools 🛠️
+## 3. Tools used 🛠️
 
 - Cisco Packet Tracer
-
----
 
 ## 4. Troubleshooting Scenarios 🧪
 
@@ -53,8 +45,6 @@ I think showing the mistakes along with the improvements will give the clearest 
 | 02 | [Wayward Proctor](Scenerios/Lab-02.md) | Escalated |
 
 More scenarios will be added as I continue working through the lab series.
-
----
 
 ## 5. Lab Source 📚
 
