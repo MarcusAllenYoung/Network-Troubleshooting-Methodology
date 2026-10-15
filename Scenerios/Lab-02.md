@@ -61,21 +61,21 @@ Since routing appeared correct, I decided to continue toward SW2 and the Server.
 
 ### Step 5 - Identify SW2
 
-- I wanted to check SW2, but I did not know its management IP address.
+`-` I wanted to check SW2, but I did not know its management IP address.
 
-- I decided to use CDP to identify the switch.
+`-` I decided to use CDP to identify the switch.
 
-- I ran: `show cdp neighbors` on RTR1, but SW2 did not appear in the output.
+`-` I ran: `show cdp neighbors` on RTR1, but SW2 did not appear in the output.
 
-- So I checked running config and found that CDP was disabled globally on RTR1, so I enabled it with `cdp run` and checked for neighbors again.
+`-` I checked the running config and found that CDP was disabled globally on RTR1, so I enabled it and checked for neighbors again.
 
-- SW2 still did not appear.
+`-` SW2 still did not appear.
 
-- I then checked the running config again and found that CDP was also disabled on the interface connecting RTR1 to SW2.
+`-` I then checked the running config again and found that CDP was also disabled on the interface connecting RTR1 to SW2.
 
-- I enabled CDP on that interface with `cdp enable` and checked for neighbors once again.
+`-` I enabled CDP on that interface with `cdp enable` and checked for neighbors once again.
 
-- SW2 still did not appear immediately.
+`-` SW2 still did not appear immediately.
 
 ## Escalation Point
 
