@@ -49,8 +49,8 @@ I think showing the mistakes along with the improvements will give the clearest 
 
 | Lab | Scenario | Result |
 |---|---|---|
-| 01 | [Snooping Byte](./Scenarios/Lab-01.md) | Escalated |
-| 02 | [Wayward Proctor](./Scenarios/Lab-02.md) | Escalated |
+| 01 | [Snooping Byte](Scenerios/Lab-01.md) | Escalated |
+| 02 | [Wayward Proctor](Scenarios/Lab-02.md) | Escalated |
 
 More scenarios will be added as I continue working through the lab series.
 
