@@ -2,21 +2,15 @@
 
 ## Scenario 🎫
 
-The Admin is unable to reach the intranet webpage hosted on the Server. Investigate and resolve the issue, if possible.
+> The Admin PC is unable to reach the intranet webpage hosted on the Server.
+>
+> Investigate the issue and resolve it, if possible.
 
-The root cause is unknown at the start of the investigation.
-
----
+##### The root cause is unknown at the start of the investigation.
 
 ## Lab 02 Topology
 
-<img width="983" height="620" alt="image" src="https://github.com/user-attachments/assets/e1636ad3-b2c7-4044-84a3-8985f646fc15" />
-
-## Reported Symptoms
-
-- Admin PC cannot reach the intranet webpage
-- Server IP address: `10.10.30.250`
-- The issue appears to involve communication between the Admin network and the Server network
+<!-- Add Lab 02 topology image here -->
 
 ---
 
@@ -24,247 +18,114 @@ The root cause is unknown at the start of the investigation.
 
 ### Step 1 - Verify the problem
 
-I started by testing from the Admin PC.
+I first tried to ping the Server at `10.10.30.250` to see if the Admin PC could reach it.
 
-#### Ping test
+- Admin PC -> ping 10.10.30.250 -> unsuccessful
 
-- Destination: `10.10.30.250`
-- Result: unsuccessful
+I initially treated the failed ping as confirmation of the issue, but the reported problem was actually access to the intranet webpage.
 
-At first, I thought the failed ping confirmed that the Server was unreachable.
+I then tested the actual service in the web browser.
 
-Later, I found that ICMP was being blocked by an ACL on RTR1, so the failed ping did not actually confirm whether the intranet webpage itself was unavailable.
+- Admin PC -> https://10.10.30.250 -> unsuccessful
 
-#### Webpage test
-
-I then tested the actual reported service.
-
-- URL: `https://10.10.30.250`
-- Result: unsuccessful
-
-This confirmed the reported problem.
-
-<img width="685" height="254" alt="image" src="https://github.com/user-attachments/assets/3e258bda-41f1-47f5-b864-1f3573cde4af" />
-
----
+The reported issue was confirmed.
 
 ### Step 2 - Decide where to start
 
-I decided to start at Layer 3 because the issue appeared to involve communication between two different networks.
+Since the Admin PC and Server were on different networks, I decided to start by checking Layer 3 connectivity.
 
-My first goal was to confirm whether the Admin PC could reach its default gateway.
+I wanted to make sure the Admin PC had the correct network configuration and could reach its default gateway before troubleshooting farther into the network.
 
----
+### Step 3 - Check the Admin PC
 
-### Step 3 - Check the Admin PC and local connectivity
-
-#### Check IP configuration
-
-Command:
+I used:
 
 `ipconfig /all`
 
-I reviewed the Admin PC network configuration.
+to check the Admin PC's network configuration.
 
-#### Test the default gateway
+I then tested its default gateway.
 
-- Destination: `10.10.20.1`
-- Result: successful
+- Admin PC -> 10.10.20.1 -> successful
 
-#### Conclusion
-
-- The Admin PC could reach RTR1
-- Local connectivity from the Admin PC appeared to be working
-- I continued investigating Layer 3
-
----
+The Admin PC could reach its gateway, so local connectivity appeared to be working.
 
 ### Step 4 - Check RTR1
 
-I connected to RTR1 using SSH.
-
-#### Routing check
-
-I reviewed the routing table and routing configuration.
+I connected to RTR1 to check whether routing was preventing the Admin PC from reaching the Server network.
 
 - Expected routes were present
-- Routing configuration appeared correct
+- Routing appeared correct
 
-#### ACL discovery
+While checking RTR1, I also found an ACL blocking ICMP traffic.
 
-While checking RTR1, I found an extended ACL named `BLOCK_PING`.
+This explained why the ping test failed, but it did not explain why the intranet webpage was unreachable because other IP traffic was still permitted.
 
-The ACL contained:
-
-`deny icmp any any`
-
-This statement blocks all ICMP traffic.
-
-The ACL was applied on RTR1's upstream-facing interface. Because of that, ICMP traffic returning through that interface could not pass through RTR1 toward the Admin PC. This explained why the Admin PC could not successfully ping the Server.
-
-The ACL also contained separate entries for ICMP echo and echo-reply, but those entries were redundant because `deny icmp any any` already blocked all ICMP traffic.
-
-#### Conclusion
-
-- The failed ping was caused by the ICMP ACL
-- The failed ping did not prove that the intranet webpage was unreachable
-- IP routing itself appeared to be working
-- I continued investigating closer to the Server
-
----
+Since routing appeared correct, I decided to continue toward SW2 and the Server.
 
 ### Step 5 - Identify SW2
 
 I wanted to check SW2, but I did not know its management IP address.
 
-#### Attempt to use CDP
-
-I tried:
-
-`show cdp neighbors`
-
-SW2 did not appear.
-
-I found that CDP was not enabled globally on RTR1, so I enabled it.
+I decided to use CDP to identify the switch.
 
 I ran:
 
 `show cdp neighbors`
 
-again.
+SW2 did not appear.
+
+I found that CDP was disabled globally on RTR1, so I enabled it and checked again.
 
 SW2 still did not appear.
 
-I then checked the running configuration and noticed that CDP was also disabled on the interface connecting RTR1 to SW2.
+I then checked the running configuration and found that CDP was also disabled on the interface connecting RTR1 to SW2.
 
-I enabled CDP on that interface.
+I enabled CDP on that interface and checked again.
 
-#### Mistake
+SW2 still did not appear immediately.
+
+## Escalation Point
 
 I expected SW2 to appear immediately after enabling CDP.
 
-When it did not appear right away, I initially stopped using that method.
+When it did not appear, I stopped using that method and did not know what to try next.
 
-Later, I realized that I had not given CDP enough time to populate the neighbor information.
+At this point, I reviewed the Witty Networks answer.
 
-#### Result
+I learned that I had not given CDP enough time to populate the neighbor information.
 
-After waiting:
-
-- SW2 appeared as a CDP neighbor
-- I was able to identify the IP address needed to connect to SW2
-
----
-
-### Step 6 - Move back to Layer 2 and check SW2
-
-Since Layer 3 routing appeared correct, I moved back to Layer 2 and checked the switch configuration closer to the Server.
-
-I connected to SW2 using SSH.
-
-#### Check Server-facing port
-
-While reviewing the running configuration, I found:
-
-- Server-facing port VLAN: VLAN 10
-- Expected Server VLAN: VLAN 30
-
-The Server belongs to the `10.10.30.0/24` network.
-
-#### Conclusion
-
-The Server-facing interface was assigned to the wrong VLAN.
-
----
+#### Result: Escalated
 
 ## Root Cause
 
-- The switch port connecting SW2 to the Server was configured as an access port in VLAN 10
-- The Server belongs to the `10.10.30.0/24` network
-- The Server-facing port should have been assigned to VLAN 30
-- The incorrect VLAN assignment prevented the Admin PC from reaching the intranet webpage
+After SW2 became visible through CDP, the server-facing switch port was checked.
 
----
+The port was assigned to VLAN 10 instead of VLAN 30.
 
-## Resolution
+The Server uses the `10.10.30.0/24` network, so its access port needed to be assigned to VLAN 30.
 
-I changed the Server-facing switch port from VLAN 10 to VLAN 30.
+## What I Missed
 
-Command:
+I did not give CDP enough time after enabling it.
 
-`switchport access vlan 30`
+I expected the neighbor information to appear immediately. When it did not, I assumed the method was not working.
 
----
-
-## Validation
-
-I tested the original reported problem again from the Admin PC.
-
-### Webpage test
-
-- URL: `https://10.10.30.250`
-- Result: successful
-
-The intranet webpage loaded successfully.
-
-<img width="788" height="248" alt="image" src="https://github.com/user-attachments/assets/472ef072-5618-437e-a7c7-01865a8e0f4f" />
-
-The original problem was resolved.
-
----
+CDP sends advertisements every 60 seconds by default, so I should have waited before moving away from that test.
 
 ## What I Learned
 
-### Test the actual reported service
+I learned that I need to understand how a troubleshooting tool works before deciding that the test failed.
 
-The reported problem was that the Admin could not reach the intranet webpage.
+In this case, using CDP was the right direction, but I gave up on it too quickly.
 
-I initially used ping to test the Server, but ICMP was being blocked by an ACL.
+I also learned that I need to test the actual service being reported. The issue was an unreachable webpage, so testing the webpage was more important than relying only on ping.
 
-The failed ping did not prove that the webpage itself was unavailable.
-
-Testing the webpage from the browser was the correct way to confirm the original problem.
-
-### Troubleshooting does not always move in one direction
-
-I started at Layer 3 because the issue looked like a routing or reachability problem.
-
-After checking RTR1 and finding that routing appeared correct, I moved back to Layer 2.
-
-The actual root cause was a Layer 2 VLAN assignment issue on SW2.
-
-### Give discovery protocols time
-
-I almost stopped using CDP because SW2 did not appear immediately.
-
-CDP sends advertisements every 60 seconds by default, so neighbor information may not appear right away after CDP is enabled.
-
-I learned to give CDP time to discover the neighbor before assuming that it is not working.
-
-### Main takeaway
-
-The symptoms of a problem do not always point directly to the layer where the root cause exists.
-
-In this lab:
-
-- The symptom looked like a Layer 3 reachability problem
-- Ping was affected by an ACL
-- Routing was working
-- The actual root cause was at Layer 2
-
----
+This lab also showed me that troubleshooting does not always move through the OSI model in one direction. I started by checking Layer 3, but the root cause ended up being a Layer 2 VLAN configuration problem.
 
 ## Video Walkthrough
 
 YouTube video coming soon ⌛
-
----
-
-## Tool
-
-- Cisco Packet Tracer
-
----
 
 ## Lab Source
 
