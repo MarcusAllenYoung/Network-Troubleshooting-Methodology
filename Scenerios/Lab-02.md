@@ -10,7 +10,7 @@
 
 ## Lab 02 Topology
 
-<!-- Add Lab 02 topology image here -->
+<img width="764" height="451" alt="image" src="https://github.com/user-attachments/assets/b58c6729-8c16-4faa-aac1-673a215346cc" />
 
 ---
 
@@ -26,7 +26,7 @@ I initially treated the failed ping as confirmation of the issue, but the report
 
 I then tested the actual service in the web browser.
 
-- Admin PC -> https://10.10.30.250 -> unsuccessful
+<img width="604" height="278" alt="image" src="https://github.com/user-attachments/assets/b8276b8d-9a91-421a-966e-2d9bcd13d58e" />
 
 The reported issue was confirmed.
 
@@ -38,11 +38,7 @@ I wanted to make sure the Admin PC had the correct network configuration and cou
 
 ### Step 3 - Check the Admin PC
 
-I used:
-
-`ipconfig /all`
-
-to check the Admin PC's network configuration.
+I used: `ipconfig /all` to check the Admin PC's network configuration.
 
 I then tested its default gateway.
 
@@ -52,12 +48,12 @@ The Admin PC could reach its gateway, so local connectivity appeared to be worki
 
 ### Step 4 - Check RTR1
 
-I connected to RTR1 to check whether routing was preventing the Admin PC from reaching the Server network.
+I SSH into to RTR1 to check whether routing was preventing the Admin PC from reaching the Server network.
 
 - Expected routes were present
 - Routing appeared correct
 
-While checking RTR1, I also found an ACL blocking ICMP traffic.
+While checking RTR1 running config, I also found an ACL blocking ICMP traffic.
 
 This explained why the ping test failed, but it did not explain why the intranet webpage was unreachable because other IP traffic was still permitted.
 
@@ -65,25 +61,21 @@ Since routing appeared correct, I decided to continue toward SW2 and the Server.
 
 ### Step 5 - Identify SW2
 
-I wanted to check SW2, but I did not know its management IP address.
+- I wanted to check SW2, but I did not know its management IP address.
 
-I decided to use CDP to identify the switch.
+- I decided to use CDP to identify the switch.
 
-I ran:
+- I ran: `show cdp neighbors` on RTR1, but SW2 did not appear in the output.
 
-`show cdp neighbors`
+- So I checked running config and found that CDP was disabled globally on RTR1, so I enabled it with `cdp run` and checked for neighbors again.
 
-SW2 did not appear.
+- SW2 still did not appear.
 
-I found that CDP was disabled globally on RTR1, so I enabled it and checked again.
+- I then checked the running config again and found that CDP was also disabled on the interface connecting RTR1 to SW2.
 
-SW2 still did not appear.
+- I enabled CDP on that interface with `cdp enable` and checked for neighbors once again.
 
-I then checked the running configuration and found that CDP was also disabled on the interface connecting RTR1 to SW2.
-
-I enabled CDP on that interface and checked again.
-
-SW2 still did not appear immediately.
+- SW2 still did not appear immediately.
 
 ## Escalation Point
 
