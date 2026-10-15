@@ -20,6 +20,8 @@
 
 ### Step 1 - Verify the problem
 
+I started by testing the issue from the affected hosts so I could confirm the problem myself before making any changes.
+
 - Host A -> ping timecards.com -> unsuccessful
 - Host C -> ping timecards.com -> unsuccessful
 
@@ -27,12 +29,23 @@ The issue was confirmed.
 
 ### Step 2 - Determine the scope
 
+I tested Host B to see if the issue was only affecting the two reported hosts or if it was a larger network problem.
+
 - Host B -> ping timecards.com -> unsuccessful
-- All three hosts -> ping 214.1.1.10 -> unsuccessful
+
+Since Host B also failed, the issue was affecting all three hosts.
+
+I then tested the timecard server directly by IP address to see if the problem was specifically related to DNS.
+
+- Host A -> ping 214.1.1.10 -> unsuccessful
+- Host B -> ping 214.1.1.10 -> unsuccessful
+- Host C -> ping 214.1.1.10 -> unsuccessful
 
 Since the server was also unreachable by IP address, DNS did not appear to be the main issue.
 
 ### Step 3 - Check internal connectivity
+
+I tested the hosts' default gateways and the DNS server to see if the hosts could communicate normally inside the local network.
 
 - All hosts -> default gateway -> successful
 - All hosts -> DNS server -> successful
@@ -41,32 +54,41 @@ Internal connectivity appeared to be working.
 
 ### Step 4 - Test toward the Internet edge
 
+I tested connectivity to the Edge router to see how far traffic could travel before failing.
+
 - Host A -> Edge router -> successful
 - Host B -> Edge router -> successful
 - Host C -> Edge router -> successful
 
-The internal path to the Edge router appeared to be working.
+Since all three hosts could reach the Edge router, the internal path to the edge of the network appeared to be working.
 
 ### Step 5 - Check routing
 
-I checked the routing table and routing configuration on the Edge router.
+I used the Admin PC to SSH into the Edge router so I could check the routing table and routing configuration.
+
+I wanted to see if a missing or incorrect route was preventing traffic from reaching the external network.
 
 - Expected routes were present
 - Routing appeared correct
 
----
+At this point, I had confirmed that the hosts could reach the Edge router and the expected routes were present, but the external destination was still unreachable.
 
 ## Escalation Point
 
-I got stuck after checking routing on the Edge router.
+After checking routing on the Edge router, I got stuck.
 
-I had narrowed the issue toward the Internet edge, but I did not think to check the NAT configuration.
+I had already confirmed that:
+
+- The hosts could reach their default gateways
+- The DNS server was reachable
+- The hosts could reach the Edge router
+- The expected routes were present
+
+I knew the problem was likely near the Internet edge, but I did not know what to test next.
 
 At this point, I reviewed the Witty Networks answer.
 
-Result: Escalated
-
----
+#### Result: Escalated
 
 ## Root Cause
 
@@ -76,39 +98,29 @@ The internal hosts were being translated to addresses in the `192.168.100.0/24` 
 
 Because those translated addresses were still private, the traffic could not be routed across the simulated public Internet.
 
----
-
 ## What I Missed
 
-I missed NAT.
+I missed checking NAT on the Edge router.
 
-After confirming that the hosts could reach the Edge router and routing looked correct, I should have checked what else the Edge router was doing with outbound traffic.
+After confirming that routing looked correct, I should have asked what else the Edge router needed to do before private internal addresses could communicate with the Internet.
 
-That should have led me to NAT.
-
----
+That should have led me to check NAT.
 
 ## What I Learned
 
-I learned not to stop after narrowing the issue to a device.
+One troubleshooting question that I want to remember going forward is:
 
-I also need to think about the different functions that device is responsible for.
+> What must be true for communication to work? 
 
-I also learned not to assume the suggested cause is correct. DNS was suggested, but direct IP connectivity also failed.
+This would have helped me in this scenario. Once I confirmed that the hosts could reach the Edge router and routing looked correct, I should have thought about what else had to be true for private internal hosts to communicate with the Internet.
 
----
+That would have helped lead me toward NAT.
+
+Going forward, I want to use this question when I get stuck instead of just guessing what to check next.
 
 ## Video Walkthrough
 
 YouTube video coming soon ⌛
-
----
-
-## Tool
-
-- Cisco Packet Tracer
-
----
 
 ## Lab Source
 
