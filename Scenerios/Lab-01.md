@@ -12,7 +12,7 @@
 
 ## Lab 01 Topology
 
-<img width="1283" height="614" alt="Lab 01 Topology" src="https://github.com/user-attachments/assets/015dbd01-437c-4d6b-a170-7ca4a7b2c4a3" />
+<img width="1001" height="613" alt="image" src="https://github.com/user-attachments/assets/518013ab-e30a-47d1-a4ea-ac0e4b4c0c60" />
 
 ---
 
